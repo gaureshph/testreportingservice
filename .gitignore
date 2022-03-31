@@ -3,3 +3,6 @@
 ################################################################################
 
 /TestRSSolution/ReportingServiceWebJob/obj
+/TestRSSolution/ReportingServiceWebJob/bin/Release/netcoreapp3.1
+/TestRSSolution/.vs/TestRSSolution
+/.vs
