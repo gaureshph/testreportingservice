@@ -9,76 +9,31 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-stages:
-    - stage: Build
-      displayName: WebApp Build Stage
-      jobs:
-      - job: Build
-        displayName: Build
-        steps:
+variables:
+  buildConfiguration: 'release'
 
-        - task: DotNetCoreCLI@2
-          displayName: Publish Project As WebJob
-          inputs:
-            command: 'publish'
-            publishWebProjects: false
-            projects: '**/*.csproj'
-            arguments: '--output $(Build.ArtifactStagingDirectory)/WebJob/App_Data/jobs/triggered/ReportingServiceWebJob'
-            zipAfterPublish: false
-            modifyOutputPath: false
-        
-        # only for a scheduled triggered WebJob 
-        - task: CopyFiles@2
-          displayName: Create Schedule For WebJob
-          inputs:
-            Contents: '**/*.job'
-            TargetFolder: '$(Build.ArtifactStagingDirectory)/WebJob/App_Data/jobs/triggered/ReportingServiceWebJob/'
-        
-        - task: PowerShell@2
-          displayName: Generate run.cmd For WebJob
-          inputs:
-            targetType: 'inline'
-            script: '"dotnet ReportingServiceWebJob.dll" | Out-File run.cmd -Encoding ASCII; $LASTEXITCODE'
-            pwsh: true
-            workingDirectory: '$(Build.ArtifactStagingDirectory)/WebJob/App_Data/jobs/triggered/ReportingServiceWebJob'
-        
-        - task: ArchiveFiles@2
-          displayName: Zip Desired Files
-          inputs:
-            rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/WebJob/'
-            includeRootFolder: false
-            archiveType: 'zip'
-            archiveFile: '$(Build.ArtifactStagingDirectory)/ReportingServiceWebJob.zip'
-            replaceExistingArchive: true
-        
-        - task: PublishPipelineArtifact@1
-          displayName: Publish All Artifacts
-          inputs:
-            targetPath: '$(Build.ArtifactStagingDirectory)'
-            publishLocation: 'pipeline'
-        
-    - stage: Deploy
-      dependsOn: Build
-      displayName: Deploy-WebJob
-    
-      jobs:
-        - deployment: DeployWeb
-          displayName: Deploy WebJob App
-          strategy:
-            runOnce:
-              deploy:
-                steps:
-                - download: none
-    
-                - task: DownloadPipelineArtifact@2
-                  displayName: 'Download Build Artifact'
-                  inputs:
-                    path: '$(System.ArtifactsDirectory)'
-
-                - task: AzureWebApp@1
-                  inputs:
-                    azureSubscription: 'Visual Studio Professional Subscription (c34b492b-56d1-4226-95d1-426b7e63f2c7)'
-                    appType: 'webApp'
-                    appName: 'WebJobsApp20220331042226'
-                    package: '$(System.ArtifactsDirectory)/Build.Build/ReportingServiceWebJob.zip'
-                    deploymentMethod: 'zipDeploy'
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/ReportingServiceWebJob.csproj'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '**/ReportingServiceWebJob.csproj'
+    arguments: '--output $(Build.BinariesDirectory)/publish_output/app_data/jobs/triggered'
+    zipAfterPublish: false
+    modifyOutputPath: false
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.BinariesDirectory)/publish_output'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
