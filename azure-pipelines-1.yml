@@ -21,6 +21,7 @@ steps:
   inputs:
     command: 'publish'
     publishWebProjects: false
+    projects: '**/ReportingServiceWebJob.csproj'
     arguments: '--output $(Build.BinariesDirectory)/publish_output/app_data/jobs/triggered'
     zipAfterPublish: false
     modifyOutputPath: false
