@@ -22,7 +22,7 @@ steps:
     command: 'publish'
     publishWebProjects: false
     projects: '**/ReportingServiceWebJob.csproj'
-    arguments: '--output $(Build.BinariesDirectory)/publish_output/app_data/jobs/triggered'
+    arguments: '--output $(Build.BinariesDirectory)/publish_output/app_data/jobs/triggered/ReportingServiceWebJob'
     zipAfterPublish: false
     modifyOutputPath: false
 - task: ArchiveFiles@2
