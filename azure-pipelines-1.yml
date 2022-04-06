@@ -22,12 +22,12 @@ steps:
     command: 'publish'
     publishWebProjects: false
     projects: '**/ReportingServiceWebJob.csproj'
-    arguments: '--output $(Build.BinariesDirectory)/publish_output/app_data/Jobs/Triggered/ReportingServiceWebJob'
+    arguments: '--output $(System.DefaultWorkingDirectory)/publish_output/app_data/Jobs/Triggered/ReportingServiceWebJob'
     zipAfterPublish: false
     modifyOutputPath: false
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.BinariesDirectory)/publish_output'
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
     includeRootFolder: false
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
