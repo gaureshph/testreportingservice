@@ -43,4 +43,4 @@ steps:
     azureSubscription: 'Visual Studio Professional Subscription (c34b492b-56d1-4226-95d1-426b7e63f2c7)'
     appType: 'webApp'
     WebAppName: 'WebJobsApp20220331042226'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
