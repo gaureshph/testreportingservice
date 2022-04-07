@@ -11,33 +11,60 @@ pool:
 
 variables:
   buildConfiguration: 'release'
+  vmImageName: 'windows-2019'
 
-steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: '**/ReportingServiceWebJob.csproj'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    publishWebProjects: false
-    projects: '**/ReportingServiceWebJob.csproj'
-    arguments: '--output $(System.DefaultWorkingDirectory)/publish_output/app_data/Jobs/Triggered/ReportingServiceWebJob'
-    zipAfterPublish: false
-    modifyOutputPath: false
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
-- publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-  artifact: drop
-- task: AzureRmWebAppDeployment@4
-  inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: 'Visual Studio Professional Subscription (c34b492b-56d1-4226-95d1-426b7e63f2c7)'
-    appType: 'webApp'
-    WebAppName: 'WebJobsApp20220331042226'
-    packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+stages:
+- stage: Build
+  displayName: Build stage
+
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: 'build'
+        projects: |
+          **/ReportingServiceWebJob.csproj
+        arguments: --output $(System.DefaultWorkingDirectory)/publish_output/app_data/Jobs/Triggered/ReportingServiceWebJob --configuration Release
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      artifact: drop
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: 'development'
+    pool:
+      vmImage: $(vmImageName)
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Visual Studio Professional Subscription (c34b492b-56d1-4226-95d1-426b7e63f2c7)'
+              appType: 'webApp'
+              WebAppName: 'WebJobsApp20220331042226'
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
