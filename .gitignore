@@ -6,3 +6,5 @@
 /TestRSSolution/ReportingServiceWebJob/bin/Release/netcoreapp3.1
 /TestRSSolution/.vs/TestRSSolution
 /.vs
+/TestRSSolution/ReportingServiceWebJob/bin
+/TestRSSolution/ReportingServiceWebJob/Properties/PublishProfiles
